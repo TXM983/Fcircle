@@ -17,12 +17,12 @@ func FetchFriendArticles(friend model.Friend, maxCount int) ([]model.Article, er
 	client := &http.Client{
 		Timeout: 15 * time.Second,
 		Transport: &http.Transport{
-			ResponseHeaderTimeout: 5 * time.Second,
-			TLSHandshakeTimeout:   5 * time.Second,
+			ResponseHeaderTimeout: 10 * time.Second,
+			TLSHandshakeTimeout:   10 * time.Second,
 		},
 	}
 
-	const maxRetry = 2
+	const maxRetry = 3
 
 	var (
 		resp *http.Response
@@ -31,21 +31,33 @@ func FetchFriendArticles(friend model.Friend, maxCount int) ([]model.Article, er
 
 	start := time.Now()
 
-	userAgent := "FcircleBot/1.0 (+https://github.com/TXM983/Fcircle)"
+	userAgents := []string{
+		"FcircleBot/1.0 (+https://github.com/TXM983/Fcircle)",
+		"Mozilla/5.0 (Windows NT 10.0; Win64; x64) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/114.0.0.0 Safari/537.36",
+		"Mozilla/5.0 (Linux; Android 12; Pixel 6 Pro) AppleWebKit/537.36 (KHTML, like Gecko) Chrome/120.0.0.0 Mobile Safari/537.36",
+	}
 
 	for attempt := 0; attempt <= maxRetry; attempt++ {
+		currentUA := userAgents[attempt%len(userAgents)]
+
 		req, e := http.NewRequest("GET", friend.RSS, nil)
 		if e != nil {
 			err = e
 			break
 		}
 
-		req.Header.Set("User-Agent", userAgent)
+		req.Header.Set("User-Agent", currentUA)
 
 		resp, err = client.Do(req)
-		if err == nil {
-			break
+		if err == nil && resp.StatusCode == http.StatusOK {
+			break // 成功
 		}
+
+		if resp != nil {
+			resp.Body.Close()
+		}
+
+		// 等待再重试
 		time.Sleep(2 * time.Second)
 	}
 	duration := time.Since(start)
