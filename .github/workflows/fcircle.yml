@@ -3,10 +3,10 @@ name: Build and Push Docker Image
 on:
   push:
     branches:
-      - master  # 你可以根据需要修改为你的主分支，比如 master 或其他
+      - feature  # 你可以根据需要修改为你的主分支，比如 master 或其他
   pull_request:
     branches:
-      - master  # 当有 pull request 向 main 分支发起时也会触发构建
+      - feature  # 当有 pull request 向 main 分支发起时也会触发构建
 
 jobs:
   build:
