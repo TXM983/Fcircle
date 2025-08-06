@@ -6,6 +6,7 @@ import (
 	"encoding/json"
 	"errors"
 	"net/http"
+	"net/url"
 	"sort"
 	"sync"
 	"time"
@@ -31,16 +32,14 @@ func LoadRemoteFriends(url string) ([]model.Friend, error) {
 }
 
 // CrawlArticles 并发抓取所有友链的前N篇文章，返回FeedResult
-func CrawlArticles(friends []model.Friend) model.FeedResult {
+func CrawlArticles(friends []model.Friend) map[string][]model.SimpleArticle {
 	const maxConcurrency = 10
-	const maxArticlesPerFriend = 5
+	const maxArticlesPerFriend = 10
 
 	var (
-		wg           sync.WaitGroup
-		mu           sync.Mutex
-		successCount int
-		failCount    int
-		allArticles  []model.Article
+		wg          sync.WaitGroup
+		mu          sync.Mutex
+		allArticles []model.Article
 	)
 
 	sem := make(chan struct{}, maxConcurrency)
@@ -54,16 +53,16 @@ func CrawlArticles(friends []model.Friend) model.FeedResult {
 			defer func() { <-sem }()
 
 			articles, err := FetchFriendArticles(f, maxArticlesPerFriend)
-			mu.Lock()
-			defer mu.Unlock()
 			if err != nil {
-				failCount++
 				utils.Infof("抓取 [%s] 失败: %v\n", f.Name, err)
-			} else {
-				successCount++
-				allArticles = append(allArticles, articles...)
-				utils.Infof("抓取 [%s] 成功，文章数: %d\n", f.Name, len(articles))
+				return
 			}
+
+			utils.Infof("抓取 [%s] 成功，文章数: %d\n", f.Name, len(articles))
+
+			mu.Lock()
+			allArticles = append(allArticles, articles...)
+			mu.Unlock()
 		}(friend)
 	}
 
@@ -86,13 +85,25 @@ func CrawlArticles(friends []model.Friend) model.FeedResult {
 		return t1.After(t2)
 	})
 
-	var result model.FeedResult
-	result.Meta.FetchTime = utils.GetNowTime()
-	result.Meta.FriendCount = len(friends)
-	result.Meta.SuccessCount = successCount
-	result.Meta.FailCount = failCount
-	result.Meta.ArticleCount = len(allArticles)
-	result.Items = allArticles
+	// 构建最终 map[string][]SimpleArticle
+	result := make(map[string][]model.SimpleArticle)
+
+	for _, article := range allArticles {
+		u, err := url.Parse(article.Url)
+		if err != nil || u.Host == "" {
+			continue
+		}
+
+		domain := u.Host
+		simple := model.SimpleArticle{
+			Title:  article.Title,
+			Link:   article.Link,
+			Source: domain,
+			Date:   article.Published,
+		}
+
+		result[domain] = append(result[domain], simple)
+	}
 
 	return result
 }

@@ -1,7 +1,7 @@
 #!/bin/sh
 
 # 设置应用程序的名称
-APP_NAME="fcircle"
+APP_NAME="fcircle-v2"
 
 # 检查进程是否存在
 pid=$(pgrep -f $APP_NAME)

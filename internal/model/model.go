@@ -30,3 +30,11 @@ type FeedResult struct {
 	} `json:"meta"`
 	Items []Article `json:"items"` // 所有抓取到的文章列表
 }
+
+// SimpleArticle 定义新的输出 JSON文 件结构
+type SimpleArticle struct {
+	Title  string `json:"title"`
+	Link   string `json:"link"`
+	Source string `json:"source"`
+	Date   string `json:"date"`
+}

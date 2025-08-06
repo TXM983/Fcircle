@@ -6,7 +6,7 @@ task:
   cron_expr: 0 0 3 * * *
 
 rss:
-  config_url: "https://cdn.aimiliy.top/npm/json/RSS.json"
+  config_url: "https://www.dao.js.cn/path/feed.json"
   output_file: "output/feed_result.json"
 
 

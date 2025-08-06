@@ -101,8 +101,12 @@ func fetchAndSave() {
 		fmt.Printf("写入结果文件失败: %v\n", err)
 		os.Exit(1)
 	}
+	total := 0
+	for _, articles := range result {
+		total += len(articles)
+	}
 
-	fmt.Printf("抓取完成，共 %d 篇文章，结果写入 %s\n", result.Meta.ArticleCount, appConfig.RSS.OutputFile)
+	fmt.Printf("抓取完成，共 %d 篇文章，结果写入 %s\n", total, appConfig.RSS.OutputFile)
 }
 
 func ginFetchHandler(c *gin.Context) {
@@ -147,8 +151,12 @@ func ginFetchHandler(c *gin.Context) {
 			fmt.Println("写入结果文件失败:", err)
 			return
 		}
+		total := 0
+		for _, articles := range result {
+			total += len(articles)
+		}
 
-		fmt.Printf("HTTP触发抓取完成，共 %d 篇文章\n", result.Meta.ArticleCount)
+		fmt.Printf("HTTP触发抓取完成，共 %d 篇文章\n", total)
 	}()
 
 	c.JSON(http.StatusOK, gin.H{
