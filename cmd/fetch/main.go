@@ -25,8 +25,8 @@ func main() {
 
 	_ = os.Setenv("TZ", "Asia/Shanghai")
 
-	// 启动后台清理任务
-	middleware.InitRateLimiterCleanup(30 * time.Minute)
+	// 30分钟执行一次清理任务，过期时间15分钟
+	middleware.InitRateLimiterCleanup(30*time.Minute, 15*time.Minute)
 
 	appConfig = config.LoadConfig()
 
