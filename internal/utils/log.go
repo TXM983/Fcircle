@@ -49,7 +49,7 @@ func Error(v ...interface{}) {
 func Infof(format string, v ...interface{}) {
 	if Logger != nil {
 		now := time.Now().In(loc).Format("2006-01-02 15:04:05")
-		Logger.Printf("["+now+"] "+format, v...)
+		Logger.Printf("["+now+"] [INFO]"+format, v...)
 	}
 }
 
